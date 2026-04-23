@@ -4,7 +4,6 @@ import './globals.css';
 export const metadata: Metadata = {
   title: 'CNH Quiz — Flashcards Inteligentes',
   description: 'Prepare-se para a prova teórica da CNH com repetição espaçada inteligente, estilo Anki.',
-  icons: { icon: '/favicon.ico' },
 };
 
 export const viewport: Viewport = {
