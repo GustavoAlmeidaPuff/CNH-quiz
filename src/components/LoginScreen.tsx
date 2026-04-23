@@ -1,11 +1,54 @@
 'use client';
 
+import { useState, type CSSProperties, type FormEvent } from 'react';
+
 interface LoginScreenProps {
   onGoogleLogin: () => Promise<void>;
   onGuestLogin: () => void;
+  onEmailSignIn: (email: string, password: string) => Promise<{ error: string | null }>;
+  onEmailSignUp: (email: string, password: string) => Promise<{ error: string | null }>;
 }
 
-export function LoginScreen({ onGoogleLogin, onGuestLogin }: LoginScreenProps) {
+export function LoginScreen({
+  onGoogleLogin,
+  onGuestLogin,
+  onEmailSignIn,
+  onEmailSignUp,
+}: LoginScreenProps) {
+  const [emailMode, setEmailMode] = useState<'signin' | 'signup'>('signin');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [formError, setFormError] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+
+  async function handleEmailSubmit(e: FormEvent) {
+    e.preventDefault();
+    setFormError(null);
+    if (!email.trim() || !password) {
+      setFormError('Preencha e-mail e senha.');
+      return;
+    }
+    if (password.length < 6) {
+      setFormError('A senha deve ter pelo menos 6 caracteres.');
+      return;
+    }
+    setSubmitting(true);
+    const res =
+      emailMode === 'signin'
+        ? await onEmailSignIn(email, password)
+        : await onEmailSignUp(email, password);
+    setSubmitting(false);
+    if (res.error) setFormError(res.error);
+  }
+
+  const inputClass =
+    'w-full rounded-xl px-4 py-3 text-sm outline-none border transition-colors focus:border-[#f5d800]';
+  const inputStyle: CSSProperties = {
+    background: '#141414',
+    borderColor: '#2a2a2a',
+    color: '#f0f0f0',
+  };
+
   return (
     <div className="min-h-screen flex flex-col items-center justify-center px-4" style={{ background: '#0a0a0a' }}>
       <div className="w-full max-w-sm animate-slide-up flex flex-col gap-8">
@@ -49,6 +92,7 @@ export function LoginScreen({ onGoogleLogin, onGuestLogin }: LoginScreenProps) {
         {/* Login Buttons */}
         <div className="flex flex-col gap-3">
           <button
+            type="button"
             onClick={onGoogleLogin}
             className="w-full flex items-center justify-center gap-3 py-4 rounded-xl font-bold text-sm transition-all duration-200"
             style={{ background: '#f5d800', color: '#000' }}
@@ -58,7 +102,98 @@ export function LoginScreen({ onGoogleLogin, onGuestLogin }: LoginScreenProps) {
             <GoogleIcon />
             Entrar com Google
           </button>
+
+          <div className="flex items-center gap-3" aria-hidden="true">
+            <div className="flex-1 h-px" style={{ background: '#2a2a2a' }} />
+            <span className="text-xs uppercase tracking-wider" style={{ color: '#555' }}>
+              ou
+            </span>
+            <div className="flex-1 h-px" style={{ background: '#2a2a2a' }} />
+          </div>
+
+          <form onSubmit={handleEmailSubmit} className="flex flex-col gap-3">
+            <div className="flex gap-2 p-1 rounded-xl" style={{ background: '#141414' }}>
+              <button
+                type="button"
+                onClick={() => {
+                  setEmailMode('signin');
+                  setFormError(null);
+                }}
+                className="flex-1 py-2 rounded-lg text-xs font-semibold transition-colors"
+                style={
+                  emailMode === 'signin'
+                    ? { background: '#2a2a2a', color: '#f0f0f0' }
+                    : { background: 'transparent', color: '#666' }
+                }
+              >
+                Entrar
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setEmailMode('signup');
+                  setFormError(null);
+                }}
+                className="flex-1 py-2 rounded-lg text-xs font-semibold transition-colors"
+                style={
+                  emailMode === 'signup'
+                    ? { background: '#2a2a2a', color: '#f0f0f0' }
+                    : { background: 'transparent', color: '#666' }
+                }
+              >
+                Criar conta
+              </button>
+            </div>
+            <label className="sr-only" htmlFor="login-email">
+              E-mail
+            </label>
+            <input
+              id="login-email"
+              type="email"
+              name="email"
+              autoComplete="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="E-mail"
+              className={inputClass}
+              style={inputStyle}
+            />
+            <label className="sr-only" htmlFor="login-password">
+              Senha
+            </label>
+            <input
+              id="login-password"
+              type="password"
+              name="password"
+              autoComplete={emailMode === 'signin' ? 'current-password' : 'new-password'}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Senha (mín. 6 caracteres)"
+              minLength={6}
+              className={inputClass}
+              style={inputStyle}
+            />
+            {formError ? (
+              <p className="text-xs px-1" style={{ color: '#f87171' }} role="alert">
+                {formError}
+              </p>
+            ) : null}
+            <button
+              type="submit"
+              disabled={submitting}
+              className="w-full py-3.5 rounded-xl font-bold text-sm transition-all duration-200 disabled:opacity-50"
+              style={{ background: '#1a1a1a', color: '#f5d800', border: '1px solid #3a3a1a' }}
+            >
+              {submitting
+                ? 'Aguarde…'
+                : emailMode === 'signin'
+                  ? 'Entrar com e-mail'
+                  : 'Cadastrar e entrar'}
+            </button>
+          </form>
+
           <button
+            type="button"
             onClick={onGuestLogin}
             className="w-full py-4 rounded-xl font-medium text-sm transition-all duration-200 border"
             style={{ background: 'transparent', color: '#888', borderColor: '#2a2a2a' }}

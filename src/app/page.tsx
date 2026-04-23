@@ -7,7 +7,8 @@ import { useAuth } from '../hooks/useAuth';
 
 export default function HomePage() {
   const router = useRouter();
-  const { user, loading, signInWithGoogle } = useAuth();
+  const { user, loading, signInWithGoogle, signInWithEmailPassword, signUpWithEmailPassword } =
+    useAuth();
   const [guestMode, setGuestMode] = useState(false);
 
   useEffect(() => {
@@ -45,6 +46,8 @@ export default function HomePage() {
     <LoginScreen
       onGoogleLogin={signInWithGoogle}
       onGuestLogin={handleGuestLogin}
+      onEmailSignIn={signInWithEmailPassword}
+      onEmailSignUp={signUpWithEmailPassword}
     />
   );
 }
