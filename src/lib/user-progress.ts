@@ -1,17 +1,14 @@
 /**
  * User progress management with Firebase Firestore.
- * Falls back to localStorage when not authenticated.
+ * Uses Firestore as the single source of truth.
  */
 import {
   doc,
   getDoc,
   setDoc,
-  updateDoc,
   collection,
   getDocs,
-  writeBatch,
   serverTimestamp,
-  type DocumentData,
 } from 'firebase/firestore';
 import { type User } from 'firebase/auth';
 import { getFirebaseDb } from './firebase';
@@ -33,26 +30,6 @@ const DEFAULT_PROGRESS: UserProgress = {
   lastStreakDate: '',
 };
 
-// ─── Local Storage fallback ──────────────────────────────────────────────────
-
-const LS_KEY = 'cnh-quiz-progress';
-
-function loadFromLocalStorage(): UserProgress {
-  if (typeof window === 'undefined') return DEFAULT_PROGRESS;
-  try {
-    const raw = localStorage.getItem(LS_KEY);
-    if (!raw) return DEFAULT_PROGRESS;
-    return JSON.parse(raw) as UserProgress;
-  } catch {
-    return DEFAULT_PROGRESS;
-  }
-}
-
-function saveToLocalStorage(progress: UserProgress): void {
-  if (typeof window === 'undefined') return;
-  localStorage.setItem(LS_KEY, JSON.stringify(progress));
-}
-
 // ─── Firestore helpers ────────────────────────────────────────────────────────
 
 function userProgressRef(userId: string) {
@@ -73,7 +50,7 @@ function cardsRef(userId: string) {
 // ─── Public API ───────────────────────────────────────────────────────────────
 
 export async function loadProgress(user: User | null): Promise<UserProgress> {
-  if (!user) return loadFromLocalStorage();
+  if (!user) return DEFAULT_PROGRESS;
 
   try {
     const db = getFirebaseDb();
@@ -95,7 +72,7 @@ export async function loadProgress(user: User | null): Promise<UserProgress> {
     };
   } catch (error) {
     console.error('Error loading progress from Firestore:', error);
-    return loadFromLocalStorage();
+    return DEFAULT_PROGRESS;
   }
 }
 
@@ -104,22 +81,13 @@ export async function saveCardState(
   cardId: string,
   state: CardState
 ): Promise<void> {
-  if (!user) {
-    const progress = loadFromLocalStorage();
-    progress.cards[cardId] = state;
-    saveToLocalStorage(progress);
-    return;
-  }
+  if (!user) return;
 
   try {
     const db = getFirebaseDb();
     await setDoc(cardRef(user.uid, cardId), state);
   } catch (error) {
     console.error('Error saving card state:', error);
-    // Fallback to localStorage
-    const progress = loadFromLocalStorage();
-    progress.cards[cardId] = state;
-    saveToLocalStorage(progress);
   }
 }
 
@@ -127,12 +95,7 @@ export async function saveSessionMeta(
   user: User | null,
   meta: Partial<Omit<UserProgress, 'cards'>>
 ): Promise<void> {
-  if (!user) {
-    const progress = loadFromLocalStorage();
-    Object.assign(progress, meta);
-    saveToLocalStorage(progress);
-    return;
-  }
+  if (!user) return;
 
   try {
     const db = getFirebaseDb();
