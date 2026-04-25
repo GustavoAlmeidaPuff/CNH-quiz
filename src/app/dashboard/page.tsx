@@ -38,6 +38,17 @@ export default function DashboardPage() {
   const displayName = user?.displayName?.split(' ')[0] ?? 'Estudante';
   const loading = authLoading || progressLoading || !user;
 
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center" style={{ background: '#0a0a0a' }}>
+        <div
+          className="w-8 h-8 rounded-full border-2 border-t-transparent animate-spin"
+          style={{ borderColor: '#f5d800', borderTopColor: 'transparent' }}
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen flex flex-col" style={{ background: '#0a0a0a' }}>
       {/* Header */}
