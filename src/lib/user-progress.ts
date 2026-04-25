@@ -53,7 +53,6 @@ export async function loadProgress(user: User | null): Promise<UserProgress> {
   if (!user) return DEFAULT_PROGRESS;
 
   try {
-    const db = getFirebaseDb();
     const metaDoc = await getDoc(userProgressRef(user.uid));
     const cardsSnap = await getDocs(cardsRef(user.uid));
 
@@ -84,7 +83,6 @@ export async function saveCardState(
   if (!user) return;
 
   try {
-    const db = getFirebaseDb();
     await setDoc(cardRef(user.uid, cardId), state);
   } catch (error) {
     console.error('Error saving card state:', error);
@@ -98,7 +96,6 @@ export async function saveSessionMeta(
   if (!user) return;
 
   try {
-    const db = getFirebaseDb();
     await setDoc(userProgressRef(user.uid), { ...meta, updatedAt: serverTimestamp() }, { merge: true });
   } catch (error) {
     console.error('Error saving session meta:', error);

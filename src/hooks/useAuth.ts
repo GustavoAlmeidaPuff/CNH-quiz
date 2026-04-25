@@ -48,7 +48,7 @@ export function useAuth() {
       });
     } catch {
       // Firebase not configured — use unauthenticated mode
-      setLoading(false);
+      queueMicrotask(() => setLoading(false));
     }
     return () => unsubscribe?.();
   }, []);

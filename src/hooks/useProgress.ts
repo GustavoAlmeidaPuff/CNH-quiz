@@ -9,7 +9,7 @@ import {
   getCardState,
   type UserProgress,
 } from '../lib/user-progress';
-import { updateCardSM2, type CardState, type Quality } from '../lib/sm2';
+import { updateCardSM2, type Quality } from '../lib/sm2';
 
 export function useProgress(user: User | null) {
   const [progress, setProgress] = useState<UserProgress>({
@@ -22,11 +22,21 @@ export function useProgress(user: User | null) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    setLoading(true);
+    let cancelled = false;
+
+    queueMicrotask(() => {
+      if (!cancelled) setLoading(true);
+    });
+
     loadProgress(user).then((p) => {
+      if (cancelled) return;
       setProgress(p);
       setLoading(false);
     });
+
+    return () => {
+      cancelled = true;
+    };
   }, [user]);
 
   const reviewCard = useCallback(
@@ -45,7 +55,7 @@ export function useProgress(user: User | null) {
   );
 
   const completeSession = useCallback(
-    async (cardsReviewed: number) => {
+    async () => {
       const today = new Date().toISOString().split('T')[0];
       const lastDate = progress.lastStreakDate;
       const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];

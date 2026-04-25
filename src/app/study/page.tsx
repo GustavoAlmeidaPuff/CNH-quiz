@@ -58,13 +58,19 @@ function StudyContent() {
     const cards = selectStudyCards(filtered, progress.cards, 20, 10);
     const queue = cards.map((c) => c.question);
 
-    if (queue.length === 0) {
-      // No cards due — pick random cards
-      const randomized = [...filtered].sort(() => Math.random() - 0.5).slice(0, 20);
-      setStudyQueue(randomized);
-    } else {
-      setStudyQueue(queue);
-    }
+    const nextQueue =
+      queue.length === 0
+        ? [...filtered].sort(() => Math.random() - 0.5).slice(0, 20)
+        : queue;
+
+    let cancelled = false;
+    queueMicrotask(() => {
+      if (!cancelled) setStudyQueue(nextQueue);
+    });
+
+    return () => {
+      cancelled = true;
+    };
   }, [authLoading, progressLoading, questions, progress.cards, moduleFilter, difficultyFilter]);
 
   const handleAnswer = useCallback(
@@ -83,7 +89,7 @@ function StudyContent() {
       }));
 
       if (currentIndex + 1 >= studyQueue.length) {
-        await completeSession(studyQueue.length);
+        await completeSession();
         setSessionStats((prev) => ({ ...prev, streak: progress.streak + 1 }));
         setSessionDone(true);
       } else {
