@@ -1,4 +1,4 @@
-import type { CardState } from './sm2';
+import { DEFAULT_CARD_STATE, type CardState } from './sm2';
 
 export interface Question {
   id: string;
@@ -77,7 +77,7 @@ export function selectStudyCards(
     const state = cardStates[q.id];
 
     if (!state) {
-      newCards.push({ question: q, state: { easeFactor: 2.5, interval: 0, repetitions: 0, nextReview: now, lastReview: 0, totalReviews: 0 }, isNew: true });
+      newCards.push({ question: q, state: { ...DEFAULT_CARD_STATE, nextReview: now }, isNew: true });
     } else if (state.nextReview <= now) {
       dueCards.push({ question: q, state, isNew: false });
     }

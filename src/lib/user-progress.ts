@@ -103,7 +103,9 @@ export async function saveSessionMeta(
 }
 
 export function getCardState(progress: UserProgress, cardId: string): CardState {
-  return progress.cards[cardId] ?? { ...DEFAULT_CARD_STATE, nextReview: Date.now() };
+  const raw = progress.cards[cardId];
+  if (!raw) return { ...DEFAULT_CARD_STATE, nextReview: Date.now() };
+  return { ...raw, consecutiveEasy: raw.consecutiveEasy ?? 0 };
 }
 
 export function getProgressStats(progress: UserProgress, totalCards: number) {
@@ -111,10 +113,12 @@ export function getProgressStats(progress: UserProgress, totalCards: number) {
   const now = Date.now();
 
   const due = states.filter((s) => s.nextReview <= now).length +
-    (totalCards - states.length); // new cards are always due
+    (totalCards - states.length);
 
   const learned = states.filter((s) => s.repetitions > 0).length;
-  const mastered = states.filter((s) => s.interval >= 21 && s.repetitions > 0).length;
+  const mastered = states.filter((s) =>
+    (s.consecutiveEasy ?? 0) >= 3 && s.interval >= 30
+  ).length;
 
   return {
     total: totalCards,

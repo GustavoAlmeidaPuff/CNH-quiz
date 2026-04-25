@@ -88,6 +88,21 @@ function StudyContent() {
         streak: prev.streak,
       }));
 
+      if (quality === 1) {
+        // "Errei" → re-insert the card later in the queue
+        const remaining = studyQueue.length - (currentIndex + 1);
+        const offset = Math.min(5, remaining);
+        const insertAt = currentIndex + 1 + offset;
+
+        setStudyQueue((prev) => {
+          const next = [...prev];
+          next.splice(insertAt, 0, card);
+          return next;
+        });
+        setCurrentIndex((i) => i + 1);
+        return;
+      }
+
       if (currentIndex + 1 >= studyQueue.length) {
         await completeSession();
         setSessionStats((prev) => ({ ...prev, streak: progress.streak + 1 }));

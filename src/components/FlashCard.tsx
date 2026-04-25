@@ -132,22 +132,22 @@ export function FlashCard({ question, questionNumber, totalQuestions, onAnswer }
             <div className="grid grid-cols-3 gap-3">
               <RatingButton
                 onClick={() => onAnswer(1)}
-                label="Não sabia"
-                sublabel="Verei em breve"
+                label="Errei"
+                sublabel="Ver de novo agora"
                 color="#ef4444"
                 bgColor="rgba(239, 68, 68, 0.1)"
               />
               <RatingButton
                 onClick={() => onAnswer(3)}
                 label="Difícil"
-                sublabel="Com dificuldade"
+                sublabel="Próxima sessão"
                 color="#f59e0b"
                 bgColor="rgba(245, 158, 11, 0.1)"
               />
               <RatingButton
                 onClick={() => onAnswer(5)}
                 label="Sabia!"
-                sublabel="Sem dificuldade"
+                sublabel="Daqui a dias"
                 color="#22c55e"
                 bgColor="rgba(34, 197, 94, 0.1)"
               />
