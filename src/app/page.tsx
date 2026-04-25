@@ -1,31 +1,25 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { LoginScreen } from '../components/LoginScreen';
 import { useAuth } from '../hooks/useAuth';
 
 export default function HomePage() {
   const router = useRouter();
-  const { user, loading, signInWithGoogle, signInWithEmailPassword, signUpWithEmailPassword } =
+  const { user, loading, signInWithGoogle, signInWithEmailPassword, signUpWithEmailPassword, signInAnonymouslyUser } =
     useAuth();
-  const [guestMode, setGuestMode] = useState(false);
 
   useEffect(() => {
-    const isGuest = sessionStorage.getItem('cnh-guest-mode');
-    if (isGuest === '1') setGuestMode(true);
-  }, []);
-
-  useEffect(() => {
-    if (!loading && (user || guestMode)) {
+    if (!loading && user) {
       router.replace('/dashboard');
     }
-  }, [user, loading, guestMode, router]);
+  }, [user, loading, router]);
 
-  const handleGuestLogin = () => {
-    sessionStorage.setItem('cnh-guest-mode', '1');
-    setGuestMode(true);
-    router.replace('/dashboard');
+  const handleGuestLogin = async () => {
+    const result = await signInAnonymouslyUser();
+    if (!result.error) router.replace('/dashboard');
+    return result;
   };
 
   if (loading) {

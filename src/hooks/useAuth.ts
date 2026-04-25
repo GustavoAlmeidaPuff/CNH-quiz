@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import {
   createUserWithEmailAndPassword,
   onAuthStateChanged,
+  signInAnonymously,
   signInWithEmailAndPassword,
   signInWithPopup,
   signOut,
@@ -26,6 +27,7 @@ function mapAuthError(err: unknown): string {
     'auth/weak-password': 'A senha deve ter pelo menos 6 caracteres.',
     'auth/too-many-requests': 'Muitas tentativas. Tente de novo em instantes.',
     'auth/operation-not-allowed': 'Login com e-mail e senha não está habilitado no projeto.',
+    'auth/admin-restricted-operation': 'Login anônimo não está habilitado no projeto Firebase.',
   };
   if (code && messages[code]) return messages[code];
   if (code?.startsWith('auth/')) return 'Não foi possível concluir. Verifique os dados e tente de novo.';
@@ -86,6 +88,16 @@ export function useAuth() {
     }
   }
 
+  async function signInAnonymouslyUser(): Promise<{ error: string | null }> {
+    try {
+      const auth = getFirebaseAuth();
+      await signInAnonymously(auth);
+      return { error: null };
+    } catch (e) {
+      return { error: mapAuthError(e) };
+    }
+  }
+
   async function signOutUser() {
     try {
       const auth = getFirebaseAuth();
@@ -101,6 +113,7 @@ export function useAuth() {
     signInWithGoogle,
     signInWithEmailPassword,
     signUpWithEmailPassword,
+    signInAnonymouslyUser,
     signOutUser,
   };
 }

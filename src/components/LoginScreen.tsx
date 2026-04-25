@@ -4,7 +4,7 @@ import { useState, type CSSProperties, type FormEvent } from 'react';
 
 interface LoginScreenProps {
   onGoogleLogin: () => Promise<void>;
-  onGuestLogin: () => void;
+  onGuestLogin: () => Promise<{ error: string | null }>;
   onEmailSignIn: (email: string, password: string) => Promise<{ error: string | null }>;
   onEmailSignUp: (email: string, password: string) => Promise<{ error: string | null }>;
 }
@@ -37,6 +37,14 @@ export function LoginScreen({
       emailMode === 'signin'
         ? await onEmailSignIn(email, password)
         : await onEmailSignUp(email, password);
+    setSubmitting(false);
+    if (res.error) setFormError(res.error);
+  }
+
+  async function handleGuestLogin() {
+    setFormError(null);
+    setSubmitting(true);
+    const res = await onGuestLogin();
     setSubmitting(false);
     if (res.error) setFormError(res.error);
   }
@@ -194,8 +202,9 @@ export function LoginScreen({
 
           <button
             type="button"
-            onClick={onGuestLogin}
-            className="w-full py-4 rounded-xl font-medium text-sm transition-all duration-200 border"
+            onClick={handleGuestLogin}
+            disabled={submitting}
+            className="w-full py-4 rounded-xl font-medium text-sm transition-all duration-200 border disabled:opacity-50"
             style={{ background: 'transparent', color: '#888', borderColor: '#2a2a2a' }}
             onMouseEnter={(e) => {
               (e.currentTarget as HTMLButtonElement).style.background = '#141414';
@@ -206,7 +215,7 @@ export function LoginScreen({
               (e.currentTarget as HTMLButtonElement).style.color = '#888';
             }}
           >
-            Continuar sem login
+            {submitting ? 'Aguarde…' : 'Continuar sem login'}
           </button>
         </div>
 
