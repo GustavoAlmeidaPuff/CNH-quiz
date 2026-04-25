@@ -25,8 +25,8 @@ interface SessionStats {
 function StudyContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { user } = useAuth();
-  const { progress, reviewCard, completeSession } = useProgress(user);
+  const { user, loading: authLoading } = useAuth();
+  const { progress, loading: progressLoading, reviewCard, completeSession } = useProgress(user);
 
   const [questions, setQuestions] = useState<Question[]>([]);
   const [studyQueue, setStudyQueue] = useState<Question[]>([]);
@@ -39,6 +39,10 @@ function StudyContent() {
   const difficultyFilter = (searchParams.get('difficulty') ?? 'all') as 'all' | 'easy' | 'medium' | 'hard';
 
   useEffect(() => {
+    if (!authLoading && !user) router.replace('/');
+  }, [authLoading, user, router]);
+
+  useEffect(() => {
     loadQuestions().then((qs) => {
       setQuestions(qs);
       setLoading(false);
@@ -46,7 +50,7 @@ function StudyContent() {
   }, []);
 
   useEffect(() => {
-    if (questions.length === 0) return;
+    if (authLoading || progressLoading || questions.length === 0) return;
 
     let filtered = filterByModule(questions, moduleFilter);
     filtered = filterByDifficulty(filtered, difficultyFilter);
@@ -61,7 +65,7 @@ function StudyContent() {
     } else {
       setStudyQueue(queue);
     }
-  }, [questions, progress.cards, moduleFilter, difficultyFilter]);
+  }, [authLoading, progressLoading, questions, progress.cards, moduleFilter, difficultyFilter]);
 
   const handleAnswer = useCallback(
     async (quality: 1 | 3 | 5) => {
@@ -89,7 +93,7 @@ function StudyContent() {
     [studyQueue, currentIndex, reviewCard, completeSession, progress.streak]
   );
 
-  if (loading) {
+  if (loading || authLoading || progressLoading || !user) {
     return (
       <div className="min-h-screen flex items-center justify-center" style={{ background: '#0a0a0a' }}>
         <div

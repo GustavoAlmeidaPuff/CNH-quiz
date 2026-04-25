@@ -10,11 +10,15 @@ import type { Question } from '../../lib/questions';
 
 export default function DashboardPage() {
   const router = useRouter();
-  const { user, signOutUser } = useAuth();
-  const { progress, loading } = useProgress(user);
+  const { user, loading: authLoading, signOutUser } = useAuth();
+  const { progress, loading: progressLoading } = useProgress(user);
   const [questions, setQuestions] = useState<Question[]>([]);
   const [selectedModule, setSelectedModule] = useState<string>('all');
   const [selectedDifficulty, setSelectedDifficulty] = useState<'all' | 'easy' | 'medium' | 'hard'>('all');
+
+  useEffect(() => {
+    if (!authLoading && !user) router.replace('/');
+  }, [authLoading, user, router]);
 
   useEffect(() => {
     loadQuestions().then(setQuestions);
@@ -32,6 +36,7 @@ export default function DashboardPage() {
   };
 
   const displayName = user?.displayName?.split(' ')[0] ?? 'Estudante';
+  const loading = authLoading || progressLoading || !user;
 
   return (
     <div className="min-h-screen flex flex-col" style={{ background: '#0a0a0a' }}>
